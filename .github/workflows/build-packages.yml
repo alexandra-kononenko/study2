@@ -1,0 +1,58 @@
+name: Сборка RPM и DEB пакетов
+
+on:
+  push:
+    branches:
+      - main  # Запуск при пушах в основную ветку
+  pull_request:  # Запуск при создании pull request в основную ветку
+    branches:
+      - main
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Клонирование репозитория
+      - name: Клонирование кода
+        uses: actions/checkout@v4
+
+      # Установка инструментов для сборки RPM и DEB
+      - name: Установка инструментов сборки
+        run: |
+          sudo apt update
+          sudo apt install -y rpm dpkg-dev debhelper
+
+      # Сборка RPM пакета
+      - name: Сборка RPM пакета
+        run: |
+          rm -rf ~/rpmbuild
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cp myapp.spec ~/rpmbuild/SPECS/
+          cp myscript.sh ~/rpmbuild/SOURCES/
+          rpmbuild -ba ~/rpmbuild/SPECS/myapp.spec
+
+      # Сборка DEB пакета
+      - name: Сборка DEB пакета
+        run: |
+          mkdir -p debian/usr/local/bin
+          cp myscript.sh debian/usr/local/bin/
+          mkdir -p debian/DEBIAN
+          echo "Package: myapp" > debian/DEBIAN/control
+          echo "Version: 1.0" >> debian/DEBIAN/control
+          echo "Section: utils" >> debian/DEBIAN/control
+          echo "Priority: optional" >> debian/DEBIAN/control
+          echo "Architecture: all" >> debian/DEBIAN/control
+          echo "Maintainer: Alexandra <alexa04qwer@gmail.com>" >> debian/DEBIAN/control
+          echo "Description: My app" >> debian/DEBIAN/control
+          dpkg-deb --build debian myapp-1.0.deb
+
+      # Сохранение пакетов как артефактов
+      - name: Загрузка артефактов
+        uses: actions/upload-artifact@v3
+        with:
+          name: packages
+          path: |
+            ~/rpmbuild/RPMS/**/*.rpm
+            myapp-1.0.deb
+
