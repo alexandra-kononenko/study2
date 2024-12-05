@@ -1,7 +1,7 @@
 Name:           myapp
 Version:        1.0
 Release:        1%{?dist}
-Summary:        My sample application
+Summary:        My sample application test
 
 License:        GPL
 URL:            https://github.com/alexandra-kononenko/study_repository
